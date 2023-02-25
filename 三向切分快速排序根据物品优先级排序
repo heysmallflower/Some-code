@@ -1,0 +1,57 @@
+    private static void Sort<T>(List<T> item, int l, int r) where T : IComparable<T>
+    {
+        if (r - l <= 15)
+        {
+            InsertSort(item, l, r);
+            return;
+        }
+        int lt = l;
+        int i = lt + 1;
+        int gt = r + 1;
+        var temp = item[l];
+        while (i < gt)
+        {
+            if (temp.CompareTo(item[i]) > 0)
+            {
+                gt--;
+                Swap(item, gt, i);
+            }
+            else if (temp.CompareTo(item[i]) < 0)
+            {
+                lt++;
+                Swap(item, lt, i);
+                i++;
+            }
+            else
+            {
+                i++;
+            }
+        }
+        Swap(item, lt, l);
+        Sort(item, l, lt - 1);
+        Sort(item, gt, r);
+    }
+    private static void Swap<T>(List<T> item, int i, int j) where T : IComparable<T>
+    {
+        T temp = item[i];
+        item[i] = item[j];
+        item[j] = temp;
+    }
+    private static void InsertSort<T>(List<T> item, int l, int r) where T : IComparable<T>
+    {
+        for (int i = l + 1; i <= r; i++)
+        {
+            var temp = item[i];
+            int j;
+            for (j = i; j > l; j--)
+            {
+                if (temp.CompareTo(item[j - 1]) > 0)
+                {
+                    item[j] = item[j - 1];
+                }
+                else
+                    break;
+            }
+            item[j] = temp;
+        }
+    }
