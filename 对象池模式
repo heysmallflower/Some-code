@@ -1,0 +1,111 @@
+public class Pool
+{
+    public GameObject Prefabs
+    {
+        get { return prefabs; }
+    }
+    public int Size
+    {
+        get { return size; }
+    }
+    public int RuntimeSize
+    {
+        get { return queue.Count; }
+    }
+    [SerializeField]
+    GameObject prefabs;
+    [SerializeField]
+    int size = 1;
+    Queue<GameObject> queue;
+    Transform parent;
+    /// <summary>
+    /// 初始化对象池
+    /// </summary>
+    public void Initialize(Transform parent)
+    {
+        queue = new Queue<GameObject>();
+        //生成的对象父级为传入参数的位置
+        this.parent = parent;
+        for (int i = 0; i < size; i++)
+        {
+            queue.Enqueue(Copy());
+        }
+    }
+    /// <summary>
+    /// 生成物品
+    /// </summary>
+    /// <returns></returns>
+    GameObject Copy()
+    {
+        var copy = GameObject.Instantiate(prefabs, parent);
+        copy.SetActive(false);
+        return copy;
+    }
+    /// <summary>
+    /// 取出一个池中对象
+    /// </summary>
+    /// <returns></returns>
+    GameObject AvailableObject()
+    {
+        GameObject availableObject = null;
+        if (queue.Count > 0 && !queue.Peek().activeSelf)
+            availableObject = queue.Dequeue();
+        else
+            availableObject = Copy();
+        //提前返回池
+        queue.Enqueue(availableObject);
+        return availableObject;
+    }
+    /// <summary>
+    /// 取出被启用的对象
+    /// </summary>
+    /// <returns></returns>
+    public GameObject PreparedObject()
+    {
+        GameObject preparedObject = AvailableObject();
+        preparedObject.SetActive(true);
+        return preparedObject;
+    }
+    /// <summary>
+    /// 取出被启用的对象
+    /// </summary>
+    /// <param name="position">对象生成的位置</param>
+    /// <returns></returns>
+    public GameObject PreparedObject(Vector3 position)
+    {
+        GameObject preparedObject = AvailableObject();
+        preparedObject.SetActive(true);
+        preparedObject.transform.position = position;
+        return preparedObject;
+    }
+    /// <summary>
+    /// 取出被启用的对象
+    /// </summary>
+    /// <param name="position">对象生成的位置</param>
+    /// <param name="quaternion">对象生成的角度</param>
+    /// <returns></returns>
+    public GameObject PreparedObject(Vector3 position, Quaternion quaternion)
+    {
+        GameObject preparedObject = AvailableObject();
+        preparedObject.SetActive(true);
+        preparedObject.transform.position = position;
+        preparedObject.transform.rotation = quaternion;
+        return preparedObject;
+    }
+    /// <summary>
+    /// 对象生成的位置
+    /// </summary>
+    /// <param name="position">对象生成的位置</param>
+    /// <param name="quaternion">对象生成的角度</param>
+    /// <param name="localSoale">对象生成的大小</param>
+    /// <returns></returns>
+    public GameObject PreparedObject(Vector3 position, Quaternion quaternion, Vector3 localSoale)
+    {
+        GameObject preparedObject = AvailableObject();
+        preparedObject.SetActive(true);
+        preparedObject.transform.position = position;
+        preparedObject.transform.rotation = quaternion;
+        preparedObject.transform.localScale = localSoale;
+        return preparedObject;
+    }
+}
