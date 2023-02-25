@@ -1,0 +1,46 @@
+public class SingleTon<T> :MonoBehaviour where T : SingleTon<T>
+{
+    //声明私有的SingleTon类型的静态字段
+    private static T instance;
+    /// <summary>
+    /// 实例化继承的类
+    /// </summary>
+    public static T Instance
+    {
+        get { return instance; }
+    }
+    /// <summary>
+    /// 运行检查
+    /// </summary>
+    protected virtual void Awake()
+    {
+        if (instance != null)
+        {
+            Destroy(gameObject);
+        }
+        else
+        {
+            instance = (T)this;
+        }
+    }
+    /// <summary>
+    /// 检查是否还在运行
+    /// </summary>
+    public static bool IsInitialized
+    {
+        get
+        {
+            return instance != null;
+        }
+    }
+    /// <summary>
+    /// 对象被销毁时，字段重置
+    /// </summary>
+    protected virtual void OnDestory()
+    {
+        if (instance == this)
+        {
+            instance = null;
+        }
+    }
+}
