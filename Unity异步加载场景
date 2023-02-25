@@ -1,0 +1,27 @@
+    /// <summary>
+    /// 离线加载光卡
+    /// </summary>
+    /// <param name="sceneName"></param>
+    /// <returns></returns>
+    IEnumerator LoadScene(string sceneName)
+    {
+        loadUI.gameObject.SetActive(true);
+        AsyncOperation asyncOperation = SceneManager.LoadSceneAsync(sceneName);
+        asyncOperation.allowSceneActivation = false;
+        while (!asyncOperation.isDone)
+        {
+            slider.value = asyncOperation.progress;
+            text.text = asyncOperation.progress * 100 + "%";
+            if (asyncOperation.progress >= 0.9f)
+            {
+                slider.value = 1f;
+                text.text = "请按任意键";
+                if (Input.anyKeyDown)
+                {
+                    asyncOperation.allowSceneActivation = true;
+                    yield return null;
+                }
+            }
+            yield return null;
+        }
+    }
