@@ -1,0 +1,156 @@
+//枚举的格子类型
+public enum E_Node_Type
+{
+    //可以走的地方
+    Walk,
+    //不能走的地方
+    Stop
+}
+//格子类
+public class MapSlot
+{
+    //当前格子的坐标
+    [HideInInspector] public int x;
+    [HideInInspector] public int y;
+    //寻路消耗
+    [HideInInspector]public float f;
+    //离起点距离
+    [HideInInspector] public float g;
+    //离终点距离
+    [HideInInspector] public float h;
+    //父对象
+    [HideInInspector] public MapSlot father;
+    //格子类型
+    public E_Node_Type type;
+    //构造函数初始化格子坐标以及类型
+    public MapSlot(int x, int y, E_Node_Type type)
+    {
+        this.x = x;
+        this.y = y;
+        this.type = type;
+    }
+}
+//a*管理器类
+public class FindSlotManage : SingleTon<FindSlotManage>
+{
+    //地图宽高
+    public int mapW;
+    public int mapH;
+    //存储地图格子容器
+    MapSlot[,] mapSlots;
+    //开启列表
+    List<MapSlot> openList;
+    //关闭列表
+    List<MapSlot> closeList;
+    /// <summary>
+    /// 初始化地图信息
+    /// </summary>
+    /// <param name="mapw"></param>
+    /// <param name="maph"></param>
+    public void InitMapInfo(int mapw, int maph)
+    {
+        mapSlots = new MapSlot[mapw, maph];
+        openList = new List<MapSlot>();
+        closeList = new List<MapSlot>();
+        mapW = mapw;
+        mapH = maph;
+        for (int x = 0; x < mapw; x++)
+        {
+            for (int y = 0; y < mapH; y++)
+            {
+                mapSlots[x, y] = new MapSlot(x, y, Random.Range(0, 101) < 20 ? E_Node_Type.Stop : E_Node_Type.Walk);
+            }
+        }
+    }
+    /// <summary>
+    /// 寻路算法
+    /// </summary>
+    /// <param name="vector2"></param>
+    /// <param name="vector3"></param>
+    /// <returns></returns>
+    public List<MapSlot> FindPath(Vector2 startPos, Vector2 endPos)
+    {
+        if (startPos.x >= mapW || startPos.y >= mapH || startPos.x < 0 || startPos.y < 0)
+            return null;
+        if (endPos.x >= mapW || endPos.y >= mapH || endPos.x < 0 || endPos.y < 0)
+            return null;
+        if (mapSlots[(int)endPos.x, (int)endPos.y].type == E_Node_Type.Stop || mapSlots[(int)startPos.x, (int)startPos.y].type == E_Node_Type.Stop)
+        {
+            return null;
+        }
+        //获取开始点与结束点
+        MapSlot start = mapSlots[(int)startPos.x, (int)startPos.y];
+        MapSlot end = mapSlots[(int)endPos.x, (int)endPos.y];
+        //清空开启列表与关闭列表
+        openList.Clear();
+        closeList.Clear();
+        //初始化开始点信息并且放入关闭列表
+        start.father = null;
+        start.f = 0;
+        start.g = 0;
+        start.h = 0;
+        closeList.Add(start);
+        while (true)
+        {
+            FindNearlySlotToOpenList(start.x + 1, start.y, 1f, start, end);
+            FindNearlySlotToOpenList(start.x - 1, start.y, 1f, start, end);
+            FindNearlySlotToOpenList(start.x, start.y + 1, 1f, start, end);
+            FindNearlySlotToOpenList(start.x + 1, start.y + 1, 1.4f, start, end);
+            FindNearlySlotToOpenList(start.x - 1, start.y + 1, 1.4f, start, end);
+            FindNearlySlotToOpenList(start.x, start.y - 1, 1f, start, end);
+            FindNearlySlotToOpenList(start.x + 1, start.y - 1, 1.4f, start, end);
+            FindNearlySlotToOpenList(start.x - 1, start.y - 1, 1.4f, start, end);
+            //都是死路
+            if (openList.Count == 0)
+            {
+                return null;
+            }
+            //选出开启列表中寻路消耗最小的
+            openList.Sort(OpenListSort);
+            //关闭列表添加开启列表中最小寻路消耗
+            closeList.Add(openList.Last());
+            //重新赋值起点
+            start = openList.Last();
+            //删除开启列表中消耗最小的点
+            openList.RemoveAt(openList.Count - 1);
+            if (start.Equals(end))
+            {
+                List<MapSlot> path = new List<MapSlot>();
+                path.Add(end);
+                while (end != null)
+                {
+                    path.Add(end.father);
+                    end = end.father;
+                }
+                path.Reverse();
+                return path;
+            }
+        }
+    }
+    //按寻路消耗排序
+    private int OpenListSort(MapSlot a, MapSlot b)
+    {
+        if (a.f < b.f)
+            return 1;
+        else if (a.f == b.f)
+            return 1;
+        else
+            return -1;
+    }
+    private void FindNearlySlotToOpenList(int x, int y, float g, MapSlot father, MapSlot end)
+    {
+        if (x < 0 || x > mapW || y < 0 || y > mapH)
+            return;
+        //取出当前格子
+        MapSlot node = mapSlots[x, y];
+        //判断当前格子类型以及是否为空查看开启开启列表关闭列表中是否包含说明是因为有死路又返回来了
+        if (node == null || node.type == E_Node_Type.Stop || openList.Contains(node) || closeList.Contains(node))
+            return;
+        node.father = father;
+        node.g = father.g + g;
+        node.h = Mathf.Abs(end.x - node.x) + Mathf.Abs(end.y - node.y);
+        node.f = node.g + node.h;
+        openList.Add(node);
+    }
+}
+
